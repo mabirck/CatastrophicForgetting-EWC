@@ -1,2 +1,2 @@
-# dqn-EWC
-Implementation of Deep Q-Learning EWC, introduced in "Overcoming Catastrophic Forgetting in Neural Networks"
+# Elastic Weight Consolidation
+Lifelong learning with Elastic Weight Consolidation, Deep Reinforcement Learning and Supervised settings.
