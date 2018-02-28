@@ -4,5 +4,5 @@ Lifelong learning with Elastic Weight Consolidation, Deep Reinforcement Learning
 # Partial Results
 
 <p align="center">
-<img width="500"  src="figures/continual.png" />
+<img width="1000"  src="figures/continual.png" />
 </p>
