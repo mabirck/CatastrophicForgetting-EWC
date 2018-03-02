@@ -2,13 +2,13 @@ from __future__ import print_function
 import argparse
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import transforms
 from torch.autograd import Variable
 from utils import saveLog
 from myDataLoader import getDataLoader
+from model import Net
 # Training settings
 
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -16,7 +16,7 @@ parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=2, metavar='N',
+parser.add_argument('--epochs', type=int, default=20, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0001)')
@@ -32,8 +32,10 @@ parser.add_argument('--dropout', action='store_true', default=False,
                     help='Activates dropout training!')
 parser.add_argument('--origin',type=str , default='mnist',
                     help='Kind of training!')
+parser.add_argument('--ewc', action='store_true')
 
 args = parser.parse_args()
+print(args.ewc, " ewc")
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
 torch.manual_seed(args.seed)
@@ -46,40 +48,6 @@ if torch.cuda.is_available():
 # Permutations to get different inputs
 permutations = [ np.random.permutation(28**2) for k in range(3) ]
 
-class Net(nn.Module):
-    def __init__(self, args, dropout):
-        super(Net, self).__init__()
-        #### SELF ARGS ####
-        self.dropout = dropout
-
-        #### MODEL PARAMS ####
-        self.fc1 = nn.Linear(784, 400)
-        self.fc1_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
-        self.fc2 = nn.Linear(400, 400)
-        self.fc2_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
-        self.fc_final = nn.Linear(400, 10)
-
-    def forward(self, x):
-        # Flatten input
-        x = x.view(-1, 784)
-        # Keep it for dropout
-
-        #FIRST FC
-        previous = x
-        x_relu = F.relu(self.fc1(x))
-
-        x = self.fc1_drop(x_relu)
-
-        #SECOND FC
-        previous = x
-        x_relu = F.relu(self.fc2(x))
-
-        x = self.fc2_drop(x_relu)
-
-        x = self.fc_final(x)
-
-        return F.log_softmax(x, dim=1)
-
 
 def train(model, epoch, train_loader, args):
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, nesterov=True)
@@ -90,7 +58,12 @@ def train(model, epoch, train_loader, args):
         data, target = Variable(data), Variable(target).long()
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+
+        objective_loss = F.nll_loss(output, target)
+        ewc_loss = model.ewc_loss(1, cuda=torch.cuda.is_available())
+
+        loss = objective_loss + ewc_loss
+
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
@@ -122,12 +95,16 @@ def test(model, epoch, test_loader, test_task, args, continuous):
         test_acc))
     if args.dropout == True:
         drop_way = "Dropout"
+    elif args.ewc == True:
+        drop_way = "EWC"
     else:
         drop_way = "None"
     saveLog(test_loss, test_acc, correct, drop_way, args, epoch, test_task, continuous)
 
 
 def run(train_datasets, test_datasets):
+    #// TODO // TODO //#
+    fisher_estimation_sample_size = 1024
 
     model = Net(args, args.dropout)
 
@@ -151,6 +128,12 @@ def run(train_datasets, test_datasets):
             if test_task <= task else None
             for test_task, test_dataset in enumerate(test_datasets, 1)]
 
+        if args.ewc:
+            # estimate the fisher information of the parameters and consolidate
+            # them in the network.
+            model.consolidate(model.estimate_fisher(
+                train_dataset, fisher_estimation_sample_size))
+
 def main():
     # Getting Datasets Tasks (A, B, C), to propagate through the model
     train_datasets = [
@@ -160,6 +143,10 @@ def main():
     test_datasets = [
         getDataLoader(args.origin, train=False, permutation=p, args=args) for p in permutations
     ]
+
+    args.dropout = False
+    print("RUNNING EWC ONE")
+    run(train_datasets, test_datasets)
 
     args.dropout = True
     print("RUNNING DROPOUT ONE")
