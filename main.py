@@ -16,7 +16,7 @@ parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
+parser.add_argument('--epochs', type=int, default=2, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0001)')
@@ -59,9 +59,14 @@ def train(model, epoch, train_loader, args):
         optimizer.zero_grad()
         output = model(data)
 
-        objective_loss = F.nll_loss(output, target)
-        ewc_loss = model.ewc_loss(1, cuda=torch.cuda.is_available())
+        objective_loss = F.cross_entropy(output, target)
 
+        # Manual
+        ewc_loss = 0
+        if(args.ewc and not(args.dropout)):
+            ewc_loss = model.ewc_loss(1, cuda=torch.cuda.is_available())
+        #if(batch_idx%333) == 0:
+            #print('EWC: ',ewc_loss)
         loss = objective_loss + ewc_loss
 
         loss.backward()
@@ -83,7 +88,7 @@ def test(model, epoch, test_loader, test_task, args, continuous):
         #print(target)
         output = model(data)
 
-        test_loss += F.nll_loss(output, target, size_average=False).data[0] # sum up batch loss
+        test_loss += F.cross_entropy(output, target, size_average=False).data[0] # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
         #print(correct)
@@ -144,10 +149,13 @@ def main():
         getDataLoader(args.origin, train=False, permutation=p, args=args) for p in permutations
     ]
 
+    args.ewc = True
     args.dropout = False
     print("RUNNING EWC ONE")
     run(train_datasets, test_datasets)
 
+
+    args.ewc = False
     args.dropout = True
     print("RUNNING DROPOUT ONE")
     run(train_datasets, test_datasets)

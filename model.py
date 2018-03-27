@@ -18,6 +18,8 @@ class Net(nn.Module):
         self.fc1_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
         self.fc2 = nn.Linear(400, 400)
         self.fc2_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
+        self.fc3 = nn.Linear(400, 400)
+        self.fc3_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
         self.fc_final = nn.Linear(400, 10)
 
     def forward(self, x):
@@ -37,9 +39,15 @@ class Net(nn.Module):
 
         x = self.fc2_drop(x_relu)
 
+        #THIRD FC
+        previous = x
+        x_relu = F.relu(self.fc3(x))
+
+        x = self.fc3_drop(x_relu)
+
         x = self.fc_final(x)
 
-        return F.log_softmax(x, dim=1)
+        return x
 
     def estimate_fisher(self, dataset, sample_size, batch_size=32):
         # Get loglikelihoods from data
