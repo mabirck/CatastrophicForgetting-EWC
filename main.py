@@ -19,7 +19,7 @@ parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
 parser.add_argument('--epochs', type=int, default=2, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
-                    help='learning rate (default: 0.0001)')
+                    help='learning rate (default: 0.001)')
 parser.add_argument('--momentum', type=float, default=0.99, metavar='M',
                     help='SGD momentum (default: 0.99)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
@@ -50,7 +50,7 @@ permutations = [ np.random.permutation(28**2) for k in range(3) ]
 
 
 def train(model, epoch, train_loader, args):
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, nesterov=True)
+    optimizer = optim.SGD(model.parameters(), lr=args.lr)
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         if torch.cuda.is_available():
@@ -109,7 +109,7 @@ def test(model, epoch, test_loader, test_task, args, continuous):
 
 def run(train_datasets, test_datasets):
     #// TODO // TODO //#
-    fisher_estimation_sample_size = 1024
+    fisher_estimation_sample_size = 200
 
     model = Net(args, args.dropout)
 

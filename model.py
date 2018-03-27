@@ -59,7 +59,7 @@ class Net(nn.Module):
             x = Variable(x).cuda() if self._is_on_cuda() else Variable(x)
             y = Variable(y).cuda() if self._is_on_cuda() else Variable(y)
 
-            loglikelihoods.append(F.log_softmax(self(x))[range(batch_size), y.data])
+            loglikelihoods.append(F.log_softmax(self(x), dim=1)[range(batch_size), y.data])
 
             if len(loglikelihoods) >= sample_size // batch_size:
                 break
