@@ -49,7 +49,7 @@ class Net(nn.Module):
 
         return x
 
-    def estimate_fisher(self, dataset, sample_size, batch_size=32):
+    def estimate_fisher(self, dataset, sample_size, batch_size=64):
         # Get loglikelihoods from data
         data_loader = dataset
         loglikelihoods = []
