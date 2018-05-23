@@ -104,8 +104,8 @@ def main():
     # plotData(dataTrain, legends, 'Train')
     # plotData(dataTest, legends, 'Test')
 
-    allFiles = [["Dropout_MNIST_TASK_1", "Dropout_MNIST_TASK_2", "Dropout_MNIST_TASK_3"], ["SGD_MNIST_TASK_1", "SGD_MNIST_TASK_2", "SGD_MNIST_TASK_3"]]
-    legends = ["Dropout", "SGD"]
+    allFiles = [["Dropout_MNIST_TASK_1", "Dropout_MNIST_TASK_2", "Dropout_MNIST_TASK_3"], ["SGD_MNIST_TASK_1", "SGD_MNIST_TASK_2", "SGD_MNIST_TASK_3"], ["EWC_MNIST_TASK_1", "EWC_MNIST_TASK_2", "EWC_MNIST_TASK_3"]]
+    legends = ["Dropout", "SGD", "EWC"]
 
     allData = []
 

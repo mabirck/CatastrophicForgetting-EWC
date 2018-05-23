@@ -7,7 +7,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 
-def getDataLoader(origin, train, download=True, permutation=None, args=None):
+def getDataLoader(train, download=True, permutation=None, args=None):
 
     transform=transforms.Compose([
            transforms.ToTensor(),
@@ -19,7 +19,7 @@ def getDataLoader(origin, train, download=True, permutation=None, args=None):
     ])
 
     dataset = datasets.MNIST(
-        './datasets/{name}'.format(name=origin), train=train,
+        './datasets/{name}'.format(name=args.origin), train=train,
         download=download, transform=transform,)
 
     trainloader = torch.utils.data.DataLoader(dataset,

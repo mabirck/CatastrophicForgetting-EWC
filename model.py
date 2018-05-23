@@ -1,25 +1,23 @@
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 import torch
 from torch.autograd import Variable
 from torch import autograd
-from copy import deepcopy
 
 
 class Net(nn.Module):
-    def __init__(self, args, dropout):
+    def __init__(self, args):
         super(Net, self).__init__()
         #### SELF ARGS ####
-        self.dropout = dropout
+        self.dropout = args.dropout
 
         #### MODEL PARAMS ####
         self.fc1 = nn.Linear(784, 400)
-        self.fc1_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
+        self.fc1_drop = nn.Dropout(0.5) if self.dropout else nn.Dropout(0)
         self.fc2 = nn.Linear(400, 400)
-        self.fc2_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
+        self.fc2_drop = nn.Dropout(0.5) if self.dropout else nn.Dropout(0)
         self.fc3 = nn.Linear(400, 400)
-        self.fc3_drop = nn.Dropout(0.5) if dropout else nn.Dropout(0)
+        self.fc3_drop = nn.Dropout(0.5) if self.dropout else nn.Dropout(0)
         self.fc_final = nn.Linear(400, 10)
 
     def forward(self, x):
