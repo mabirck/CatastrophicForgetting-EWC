@@ -12,13 +12,13 @@ from arguments import get_args
 # Training settings
 
 
-def train(model, epoch, train_loader, optimizer=None, args=None):
+def train(model, epoch, train_loader, args=None):
     model.train()
     for batch_idx, (data, target) in tqdm(enumerate(train_loader)):
         if torch.cuda.is_available():
             data, target = data.cuda(), target.cuda()
         data, target = Variable(data), Variable(target).long()
-        optimizer.zero_grad()
+        model.optimizer.zero_grad()
         output = model(data)
 
         objective_loss = F.cross_entropy(output, target)
@@ -26,11 +26,11 @@ def train(model, epoch, train_loader, optimizer=None, args=None):
         # Manual
         ewc_loss = 0
         if(args.ewc and not(args.dropout)):
-            ewc_loss = model.ewc_loss(1, cuda=torch.cuda.is_available())
+            ewc_loss = model.ewc_loss(15, cuda=torch.cuda.is_available())
         loss = objective_loss + ewc_loss
 
-        loss.backward()
-        optimizer.step()
+        loss.backward(retain_graph=True)
+        model.optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -46,15 +46,16 @@ def run(train_datasets, test_datasets, args=None):
     if torch.cuda.is_available():
         model.cuda()
 
-    # Global optimizer
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=1e-05)
+    # Set Model Optimizer
+    model.optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=1e-05, nesterov=True, momentum=0.9)
 
     for task, train_dataset in enumerate(train_datasets):
         ''' Evaluate Current Net '''
         test_it(model, 0, test_datasets, args, task)
 
         for epoch in range(1, args.epochs + 1):
-            train(model, epoch, train_dataset, optimizer, args)
+
+            train(model, epoch, train_dataset, args)
 
             ''' Evaluate Current Net '''
             test_it(model, epoch, test_datasets, args, task)
@@ -89,14 +90,14 @@ def main():
     run(train_datasets, test_datasets, args)
 
 
-    args.ewc = False
-    args.dropout = True
-    print("RUNNING DROPOUT ONE")
-    run(train_datasets, test_datasets)
+    # args.ewc = False
+    # args.dropout = True
+    # print("RUNNING DROPOUT ONE")
+    # run(train_datasets, test_datasets, args)
 
-    args.dropout = False
-    print("RUNNING NONE ONE")
-    run(train_datasets, test_datasets)
+    # args.dropout = False
+    # print("RUNNING NONE ONE")
+    # run(train_datasets, test_datasets, args)
 
 
 if __name__ == "__main__":

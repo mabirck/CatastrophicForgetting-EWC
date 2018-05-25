@@ -24,7 +24,7 @@ def getDataLoader(train, download=True, permutation=None, args=None):
 
     trainloader = torch.utils.data.DataLoader(dataset,
     batch_size=args.batch_size if train else args.test_batch_size,
-    shuffle=True, num_workers=2)
+    shuffle=True, num_workers=1)
 
     return trainloader;
 

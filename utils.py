@@ -3,11 +3,11 @@ import csv
 import torch
 import torch.optim as optim
 from torch.autograd import Variable as V
-import torch.functional as F
+import torch.nn.functional as F
 from myDataLoader import getDataLoader
 
 def saveLog(test_loss, test_acc, correct, dropout, args, epoch, test_task, continual=False):
-    print(test_task, continual)
+    #print(test_task, continual)
     path = './log/'
     #path += "_".join([args.arc, str(args.epochs), args.filter_reg, str(args.phi), 'seed', str(args.seed), 'depth', str(args.depth), args.intra_extra])
     path+= dropout+'_MNIST_TASK_'+str(test_task)+'_'+str(args.seed)
@@ -28,8 +28,8 @@ def to_one_hot(y, n_dims=None):
     y_one_hot = y_one_hot.view(*y.shape, -1)
     return V(y_one_hot) if isinstance(y, V) else y_one_hot
 
+
 def test(model, epoch, test_loader, test_task, args, continuous):
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
     model.eval()
     test_loss = 0
     correct = 0
@@ -47,8 +47,8 @@ def test(model, epoch, test_loader, test_task, args, continuous):
 
     test_loss /= len(test_loader.dataset)
     test_acc = 100. * correct / len(test_loader.dataset)
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.5f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
+    print('\nTest set task {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.5f}%)\n'.format(
+        test_task, test_loss, correct, len(test_loader.dataset),
         test_acc))
     if args.dropout == True:
         drop_way = "Dropout"
@@ -66,7 +66,7 @@ def test_it(model, epoch, test_datasets, args, task):
     [
         test(model, epoch, test_dataset, test_task, args, task != test_task)
             if test_task <= task else None
-                for test_task, test_dataset in enumerate(test_datasets, 1)
+                for test_task, test_dataset in enumerate(test_datasets)
     ]
 
 def get_datasets(permutations, args):
